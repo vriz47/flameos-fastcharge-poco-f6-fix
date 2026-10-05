@@ -1,0 +1,56 @@
+#!/sbin/sh
+#################
+# MiCharge + BAA Restore for POCO F6 (peridot)
+#################
+
+umask 022
+
+# Load util_functions if exists
+[ -f $TMPDIR/util_functions.sh ] && . $TMPDIR/util_functions.sh
+
+ui_print "======================================="
+ui_print "  90W FastCharge Restore (MiCharge+BAA)"
+ui_print "  POCO F6 (peridot) | AOSP-based ROM"
+ui_print "======================================="
+ui_print ""
+
+if [ $KSU -eq 1 ]; then
+  ui_print "[KSU] Detected KernelSU"
+elif [ $MAGISK_VER_CODE -ge 20000 ]; then
+  ui_print "[Magisk] Detected Magisk v$MAGISK_VER"
+else
+  ui_print "[?] Unknown root solution"
+fi
+
+ui_print ""
+ui_print "[*] Extracting module files..."
+unzip -o "$ZIPFILE" 'system/*' -d $MODPATH/ 2>&1 | tail -5
+
+ui_print "[*] Setting permissions..."
+
+# Vendor bins
+if [ -f $MODPATH/system/vendor/bin/hw/vendor.xiaomi.hardware.micharge-service ]; then
+  chmod 0755 $MODPATH/system/vendor/bin/hw/vendor.xiaomi.hardware.micharge-service
+fi
+if [ -f $MODPATH/system/vendor/bin/batterysecret ]; then
+  chmod 0755 $MODPATH/system/vendor/bin/batterysecret
+fi
+
+# Vendor libs
+find $MODPATH/system/vendor/lib64 -name "*.so" 2>/dev/null | xargs -r chmod 0644
+# Vendor etc
+find $MODPATH/system/vendor/etc -type f 2>/dev/null | xargs -r chmod 0644
+find $MODPATH/system/vendor/etc/init -name "*.rc" 2>/dev/null | xargs -r chmod 0644
+# ODM
+find $MODPATH/system/odm -name "*.json" -o -name "*.bin" 2>/dev/null | xargs -r chmod 0644
+find $MODPATH/system/odm/etc -type f 2>/dev/null | xargs -r chmod 0644
+find $MODPATH/system/odm/firmware -type f 2>/dev/null | xargs -r chmod 0644
+
+ui_print "[*] Permissions set."
+ui_print ""
+ui_print "[!] NOTE: If 90W not detected after reboot,"
+ui_print "    check dmesg/logcat for SELinux AVCs"
+ui_print "    (may need sepolicy.rule tweak)."
+ui_print ""
+ui_print "[✓] Installation complete!"
+ui_print "    Reboot to apply changes."

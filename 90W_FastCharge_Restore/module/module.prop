@@ -1,0 +1,6 @@
+id=90w-fastcharge-restore
+name=90W FastCharge Restore (MiCharge+BAA)
+version=v1.0.0
+versionCode=100
+author=vriz47
+description=Restore Xiaomi miCharge HAL + BAA configs + charger firmware for 90W fast charging on AOSP-based ROM (POCO F6/peridot). Safe, reversible.
