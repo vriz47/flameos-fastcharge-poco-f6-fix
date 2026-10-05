@@ -1,19 +1,34 @@
 # POCO F6 — Fix 90W Fast Charging di AOSP-based ROM (FlameOS)
 
-Tujuan: mendokumentasikan hasil riset + solusi biar 90W fast charging detek & jalan normal pas pakai AOSP-based ROM (FlameOS) dibandingkan stock HyperOS.
+Tujuan: dokumentasi riset + bundle restore komponen charging Xiaomi agar 90W fast charging berfungsi normal di AOSP-based ROM (FlameOS/ASCP).
 
-## Latar Belakang
-POCO F6 (peridot) support fast charging 90W. Di beberapa AOSP-based/custom ROM (termasuk FlameOS recook) kadang nilai input current/limit, thermal atau detection charger beda → charging turun (mis. 30–45W) atau nggak max 90W.
+## Problem
+ROM AOSP-based (ASCP) kehilangan stack charging Xiaomi: miCharge HAL (vendor.xiaomi.hardware.micharge), BAA charger configs, serta beberapa blob terkait → detection 90W/PD bisa tidak optimal.
 
-## Fokus Riset
-- Charger detection (USB PD / QC?) & input current limit
-- Kernel/driver charging (charger IC, fuel gauge)
-- Props / sysfs terkait charging
-- MIUI vs AOSP difference
-- Possible workaround: tweak sysfs, override input_current_limit, thermal policy, or module/Xposed? 
+## Solusi
+Restore komponen berikut dari ROM yang masih memiliki 90W berfungsi:
 
-## Status
-WIP — belum ada temuan final.
+### Bundle: `restore_bundle/`
+Berisi file siap dipakai (struktur vendor/odm sesuai partition):
 
-## File
-- `RISET-90W-FASTCHARGE.md` — log step by step (hasil observasi, test, fix)
+**Vendor:**
+- bin/hw/vendor.xiaomi.hardware.micharge-service
+- bin/batterysecret
+- lib64/vendor.xiaomi.hardware.micharge-V2-ndk.so
+- lib64/libbaa_* (7 files) + libaudiochargerlistener.so
+- etc/init/vendor.xiaomi.hardware.micharge-service.rc
+- etc/init/hw/init.batterysecret.rc
+- etc/vintf/manifest/vendor.xiaomi.hardware.micharge.xml
+- etc/charger_fw_fstab.qti, etc/charger_diag.cfg
+
+**ODM:**
+- etc/charger/BAA_config_common.json, BAA_config_peridot.json
+- firmware/211_Charge_RTP.bin, 74_ChargeWire_RTP.bin, 75_ChargeWireless_RTP.bin
+
+## Cara Pemakaian (Rekomendasi: KernelSU/Magisk Module)
+Buat module untuk overlay file2 ini ke /vendor dan /odm (safest, reversible). Pastikan permission + SELinux context terjaga.
+
+## Dokumentasi
+- `RISET-90W-FASTCHARGE.md` — analisis perbandingan ASCP vs ROM terpasang
+- `CHARGING_FILES_LIST.md` — daftar lengkap file yang dibutuhkan
+- `RESTORE_PLAN.md` — detail rencana restore + test checklist
